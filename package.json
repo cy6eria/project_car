@@ -1,0 +1,14 @@
+{
+  "name": "project_car",
+  "version": "0.0.0",
+  "description": "Project C.A.R. aka Control Auto Remotely",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}
