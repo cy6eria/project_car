@@ -24,7 +24,10 @@ function loop () {
     document.getElementById('c').innerHTML = currentGamepadState.axes[2];
     document.getElementById('d').innerHTML = currentGamepadState.axes[3];
 
-    socket.send(currentGamepadState.axes[0]);
+    socket.send(JSON.stringify({
+        steering: currentGamepadState.axes[0],
+        drive: currentGamepadState.axes[3]
+    }));
 }
 
 window.addEventListener('gamepadconnected', (e) => {
