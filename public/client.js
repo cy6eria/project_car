@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://192.168.1.106:3000");
+const socket = new WebSocket('ws://' + window.location.host);
 
 socket.onopen = () => {
     console.log("Соединение установлено.");
@@ -25,8 +25,8 @@ function loop () {
     document.getElementById('d').innerHTML = currentGamepadState.axes[3];
 
     socket.send(JSON.stringify({
-        steering: currentGamepadState.axes[0],
-        drive: currentGamepadState.axes[3]
+        steering: -1*currentGamepadState.axes[2],
+        drive: currentGamepadState.axes[1]
     }));
 }
 
