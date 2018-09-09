@@ -1,7 +1,9 @@
 const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
-var gpio = require('pigpio').Gpio;
+const gpio = require('pigpio').Gpio;
+
+const WebStreamerServer = require('./stream_server');
 
 const steering = new gpio(10, { mode: gpio.OUTPUT });
 const drive = new gpio(25, {mode: gpio.OUTPUT});
@@ -19,6 +21,8 @@ app.use(express.static('public'));
 
 server.listen(3000, () => console.log(`You can find me on port ${server.address().port}!`));
 
+new WebStreamerServer(wss);
+
 // Websocket connection have been established.
 wss.on('connection', function connection(ws) {
     // Setting the steering control in the middle position.
@@ -30,29 +34,33 @@ wss.on('connection', function connection(ws) {
     drive.pwmWrite(0);
 
     ws.on('message', function incoming(message) {
-        const params = JSON.parse(message);
+        try {
+            const params = JSON.parse(message);
 
-        // Setting a next state of the steering.
-        const normilized = 1 + parseFloat(params.steering);
-        const nextValue = 500 + (normilized * 950);
+            // Setting a next state of the steering.
+            const normilized = 1 + parseFloat(params.steering);
+            const nextValue = 500 + (normilized * 950);
 
-        steering.servoWrite(parseInt(nextValue));
-        
-        // Setting a next state of the drive.
-        if (params.drive > 0.1) {
-            in1.digitalWrite(1);
-            in2.digitalWrite(0);
-        } else if (params.drive < -0.1) {
-            in1.digitalWrite(0);
-            in2.digitalWrite(1);
-        } else {
-            in1.digitalWrite(0);
-            in2.digitalWrite(0);
+            steering.servoWrite(parseInt(nextValue));
+            
+            // Setting a next state of the drive.
+            if (params.drive > 0.1) {
+                in1.digitalWrite(1);
+                in2.digitalWrite(0);
+            } else if (params.drive < -0.1) {
+                in1.digitalWrite(0);
+                in2.digitalWrite(1);
+            } else {
+                in1.digitalWrite(0);
+                in2.digitalWrite(0);
+            }
+
+            const valueWithoutSign = `${params.drive}`.replace('-', '');
+            const nextDriveValue = parseInt(255 * parseFloat(valueWithoutSign));
+
+            drive.pwmWrite(nextDriveValue);
+        } catch (err) {
+
         }
-
-        const valueWithoutSign = `${params.drive}`.replace('-', '');
-        const nextDriveValue = parseInt(255 * parseFloat(valueWithoutSign));
-
-        drive.pwmWrite(nextDriveValue);
     });
 });

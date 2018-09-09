@@ -1,7 +1,12 @@
-const socket = new WebSocket('ws://' + window.location.host);
+const uri = 'ws://' + window.location.host;
+const canvas = document.getElementById('canvas');
+const wsavc = new WSAvcPlayer(canvas, "webgl", 1, 35);
+const socket = new WebSocket(uri);
 
 socket.onopen = () => {
     console.log("Соединение установлено.");
+    wsavc.connect(socket);
+    wsavc.playStream();
     gamepadLoop = setInterval(loop, 50);
 };
 
@@ -16,18 +21,26 @@ socket.onmessage = (event) => {
 
 let gamepadLoop;
 let gamepadIndex;
+let drive = '0';
+let steering = '0';
 
 function loop () {
-    const currentGamepadState = navigator.getGamepads()[gamepadIndex];
-    document.getElementById('a').innerHTML = currentGamepadState.axes[0];
-    document.getElementById('b').innerHTML = currentGamepadState.axes[1];
-    document.getElementById('c').innerHTML = currentGamepadState.axes[2];
-    document.getElementById('d').innerHTML = currentGamepadState.axes[3];
+    if (gamepadIndex >= 0) {
+        const currentGamepadState = navigator.getGamepads()[gamepadIndex];
 
-    socket.send(JSON.stringify({
-        steering: -1*currentGamepadState.axes[2],
-        drive: currentGamepadState.axes[1]
-    }));
+        const currentSteering = currentGamepadState.axes[2].toFixed(1);
+        const currentDrive = currentGamepadState.axes[1].toFixed(1);
+
+        if (drive !== currentDrive || steering !== currentSteering) {
+            drive = currentDrive;
+            steering = currentSteering;
+
+            socket.send(JSON.stringify({
+                steering: -1*currentSteering,
+                drive: currentDrive*1
+            }));
+        }
+    }
 }
 
 window.addEventListener('gamepadconnected', (e) => {
